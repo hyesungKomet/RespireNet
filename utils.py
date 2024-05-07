@@ -154,29 +154,39 @@ def generate_padded_samples_old(source, output_length):
     return copy
 
 def generate_padded_samples(original, source, output_length, sample_rate, types):
-	copy = np.zeros(output_length, dtype=np.float32)
-	src_length = len(source)
-	left = output_length-src_length # amount to be padded
+    copy = np.zeros(output_length, dtype=np.float32)
+    if len(np.asarray(source).shape) > 1:
+        source = np.mean(source, axis=0)
+        original = np.mean(original, axis=0)
+    src_length = len(source)
+    if src_length > output_length:
+        src_length = output_length
+        source = source[:src_length]
+    left = output_length-src_length # amount to be padded
+
+	# copy = np.zeros(output_length, dtype=np.float32)
+	# src_length = len(source)
+	# left = output_length-src_length # amount to be padded
 	# pad front or back
-	prob = random.random()
-	if types == 1:
-		aug = original
-	else:
-		aug = gen_augmented(original, sample_rate)
+    prob = random.random()
+    if types == 1:
+        aug = original
+    else:
+        aug = gen_augmented(original, sample_rate)
 
-	while len(aug) < left:
-		aug = np.concatenate([aug, aug])
+    while len(aug) < left:
+        aug = np.concatenate([aug, aug])
 
-	if prob < 0.5:
-		#pad back
-		copy[left:] = source
-		copy[:left] = aug[len(aug)-left:]
-	else:
-		#pad front
-		copy[:src_length] = source[:]
-		copy[src_length:] = aug[:left]
+    if prob < 0.5:
+        #pad back
+        copy[left:] = source[:]
+        copy[:left] = aug[len(aug)-left:]
+    else:
+        #pad front
+        copy[:src_length] = source[:]
+        copy[src_length:] = aug[:left]
 
-	return copy
+    return copy
 
 
 #**********************DATA AUGMENTAION***************************
